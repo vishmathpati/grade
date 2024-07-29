@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Grade Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.6/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react">
+        const { useState } = React;
+
+        const Input = ({ id, type, value, onChange, placeholder }) => (
+            <input
+                id={id}
+                type={type}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                           focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            />
+        );
+
+        const Label = ({ htmlFor, children }) => (
+            <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700">
+                {children}
+            </label>
+        );
+
+        const Button = ({ onClick, children }) => (
+            <button
+                onClick={onClick}
+                className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+            >
+                {children}
+            </button>
+        );
+
+        const Alert = ({ variant, children }) => (
+            <div className={`p-4 mt-4 text-sm rounded-md ${variant === 'destructive' ? 'bg-red-100 text-red-700 border border-red-400' : 'bg-blue-100 text-blue-700 border border-blue-400'}`} role="alert">
+                {variant === 'destructive' && (
+                    <svg className="inline w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                )}
+                {children}
+            </div>
+        );
+
+        const GradeCalculator = () => {
+            const [currentGrade, setCurrentGrade] = useState('');
+            const [finalWeight, setFinalWeight] = useState('');
+            const [desiredGrade, setDesiredGrade] = useState('');
+            const [result, setResult] = useState(null);
+            const [error, setError] = useState('');
+
+            const calculateGrade = () => {
+                const current = parseFloat(currentGrade);
+                const weight = parseFloat(finalWeight);
+                const desired = parseFloat(desiredGrade);
+
+                if (isNaN(current) || isNaN(weight) || isNaN(desired)) {
+                    setError('Please enter valid numbers for all fields.');
+                    setResult(null);
+                    return;
+                }
+
+                if (weight <= 0 || weight >= 100) {
+                    setError('Final exam weight must be between 0 and 100.');
+                    setResult(null);
+                    return;
+                }
+
+                const nonFinalWeight = 100 - weight;
+                const requiredScore = (desired - (current * nonFinalWeight / 100)) / (weight / 100);
+
+                if (requiredScore > 100) {
+                    setError('It is not possible to achieve the desired grade.');
+                    setResult(null);
+                } else if (requiredScore < 0) {
+                    setError('You have already achieved higher than the desired grade.');
+                    setResult(null);
+                } else {
+                    setError('');
+                    setResult(requiredScore.toFixed(2));
+                }
+            };
+
+            return (
+                <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Final Grade Calculator</h2>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="currentGrade">Current Grade (%)</Label>
+                            <Input
+                                id="currentGrade"
+                                type="number"
+                                value={currentGrade}
+                                onChange={(e) => setCurrentGrade(e.target.value)}
+                                placeholder="Enter your current grade"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="finalWeight">Final Exam Weight (%)</Label>
+                            <Input
+                                id="finalWeight"
+                                type="number"
+                                value={finalWeight}
+                                onChange={(e) => setFinalWeight(e.target.value)}
+                                placeholder="Enter final exam weight"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="desiredGrade">Desired Final Grade (%)</Label>
+                            <Input
+                                id="desiredGrade"
+                                type="number"
+                                value={desiredGrade}
+                                onChange={(e) => setDesiredGrade(e.target.value)}
+                                placeholder="Enter your desired grade"
+                            />
+                        </div>
+                        <Button onClick={calculateGrade}>Calculate</Button>
+                    </div>
+                    {error && (
+                        <Alert variant="destructive">
+                            <span className="font-medium">Error:</span> {error}
+                        </Alert>
+                    )}
+                    {result !== null && (
+                        <Alert>
+                            <span className="font-medium">Result:</span> You need to score {result}% on your final exam to achieve your desired grade.
+                        </Alert>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<GradeCalculator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
